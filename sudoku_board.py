@@ -3,20 +3,15 @@ import time
 import pygame
 import sudoku_utils
 from sudoku import Sudoku
-WIDTH = 550
-HEIGHT = 750
-background_color = (251,247,245)
 button_color = (17,18,17)
 number_color = (86,3,252)
 wrong_color = (235,0,20)
-pygame.init()
-game_font = pygame.font.SysFont('arialms',35)
-puzzle = Sudoku(3).difficulty(0.5)
-grid = puzzle.board
-original_grid = copy.deepcopy(grid)
-timer_sec = 2
+WIDTH = 550
+HEIGHT = 750
+background_color = (251,247,245)
 
-def drawNumber(window, pos):
+def drawNumber(window, pos, game_font, grid, original_grid):
+    global background_color
     column, line = pos[0], pos[1]
     while True:
         for event in pygame.event.get():
@@ -40,7 +35,7 @@ def drawNumber(window, pos):
                     return
                 return
 
-def checkBoard(window):
+def checkBoard(window, grid):
     for line in range(0,9):
         for column in range(0,9):
             if not sudoku_utils.checkRow(line,column,grid):
@@ -91,14 +86,40 @@ def drawCleanBoard(window,color):
     pygame.display.update()
     return
 
-def createBoard():
-    global grid, timer_sec
+def replaceNoneWithZero(grid):
+    new_grid = []
+    for line in grid:
+        array = [] 
+        for element in line:
+            if element is None:
+                array.append(0)
+            else:
+                array.append(element)
+        new_grid.append(array)
+    return new_grid
+
+def createBoard(window,difficulty_factor):
+    timer_sec = 0
+    if difficulty_factor==0:
+        puzzle = Sudoku(3).difficulty(0.4)
+        timer_sec = 200
+    elif difficulty_factor==1:
+        puzzle = Sudoku(3).difficulty(0.6)
+        timer_sec = 360
+    elif difficulty_factor==2:
+        puzzle = Sudoku(3).difficulty(0.8)
+        timer_sec = 1200
+    
+    
+    grid = puzzle.board
+    grid = replaceNoneWithZero(grid)
+    original_grid = copy.deepcopy(grid)
+    
+    game_font = pygame.font.SysFont('arialms',35)
     timer_text = game_font.render(time.strftime('%M:%S',time.gmtime(timer_sec)),True,(0,0,0))
     timer = pygame.USEREVENT + 1
     pygame.time.set_timer(timer,1000)
-    window = pygame.display.set_mode((WIDTH,HEIGHT))
     pygame.display.set_caption("Sudoku")
-    window.fill(background_color)
 
     new_grid = []
     for line in grid:
@@ -132,7 +153,7 @@ def createBoard():
     pygame.draw.rect(window, (255,255,255), (400, WIDTH+100, 120, 50))
     window.blit(timer_text,(415,WIDTH+100))
     pygame.display.update()
-    
+
     running = True
     while running:
         for event in pygame.event.get():
@@ -154,9 +175,9 @@ def createBoard():
                 pos = pygame.mouse.get_pos()
                 print(pos)
                 if 49 < pos[0] < 170 and WIDTH+100 < pos[1] < WIDTH+150:
-                    checkBoard(window)
+                    checkBoard(window,grid)
                 else:
-                    drawNumber(window, (pos[0]//50,pos[1]//50))
+                    drawNumber(window, (pos[0]//50,pos[1]//50), game_font,grid,original_grid)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
