@@ -1,6 +1,5 @@
 import copy
 
-
 def createColumns(grid):
     columns = []
     for column in range(0,9):
