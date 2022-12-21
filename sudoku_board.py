@@ -13,6 +13,10 @@ background_color = (251,247,245)
 def drawNumber(window, pos, game_font, grid, original_grid):
     global background_color
     column, line = pos[0], pos[1]
+    width_first_col = 4 if (pos[0]-1)%3 == 0 else 2
+    width_second_col = 4 if (pos[0])%3 == 0 else 2
+    width_first_line = 4 if (pos[1]-1)%3 == 0 else 2
+    width_second_line = 4 if (pos[1])%3 == 0 else 2
     while True:
         for event in pygame.event.get():
             print(event.type)
@@ -24,6 +28,10 @@ def drawNumber(window, pos, game_font, grid, original_grid):
                 if event.key == 48:
                     grid[line-1][column-1] = event.key - 48
                     pygame.draw.rect(window, background_color, (pos[0]*50+5, pos[1]*50 + 5, 50-10, 50-10))
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50,pos[1]*50), (pos[0]*50 + 50,pos[1]*50),width_first_line)
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50,pos[1]*50), (pos[0]*50,pos[1]*50+50),width_first_col)
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50+50,pos[1]*50), (pos[0]*50 + 50,pos[1]*50+50),width_second_col)
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50,pos[1]*50+50), (pos[0]*50 + 50,pos[1]*50+50),width_second_line)
                     pygame.display.update()
                     return
                 if(0<event.key-48<10):
@@ -31,11 +39,16 @@ def drawNumber(window, pos, game_font, grid, original_grid):
                     value = game_font.render(str(event.key-48),True,(0,0,0))
                     window.blit(value,(pos[0]*50+15,pos[1]*50))
                     grid[line-1][column-1] = event.key - 48
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50,pos[1]*50), (pos[0]*50 + 50,pos[1]*50),width_first_line)
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50,pos[1]*50), (pos[0]*50,pos[1]*50+50),width_first_col)
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50+50,pos[1]*50), (pos[0]*50 + 50,pos[1]*50+50),width_second_col)
+                    pygame.draw.line(window,(0,0,0),(pos[0]*50,pos[1]*50+50), (pos[0]*50 + 50,pos[1]*50+50),width_second_line)
                     pygame.display.update()
                     return
                 return
 
 def checkBoard(window, grid):
+    congrats_font = pygame.font.SysFont("arialms",35, True)
     for line in range(0,9):
         for column in range(0,9):
             if not sudoku_utils.checkRow(line,column,grid):
@@ -77,6 +90,12 @@ def checkBoard(window, grid):
         countZero = countZero + line.count(0)
     if not countZero:
         drawCleanBoard(window,(0,255,0))
+        congrats_text = congrats_font.render("Congratulations! You won!",True,(0,255,0))
+        window.blit(congrats_text,(30,570))
+        pygame.draw.rect(window, (255,255,255), (400, WIDTH+100, 120, 50))
+        pygame.display.update()
+        time.sleep(5)
+        pygame.quit()
 
 def drawCleanBoard(window,color):
     for gridLines in range(0,10):
@@ -102,10 +121,10 @@ def createBoard(window,difficulty_factor):
     timer_sec = 0
     if difficulty_factor==0:
         puzzle = Sudoku(3).difficulty(0.4)
-        timer_sec = 200
+        timer_sec = 300
     elif difficulty_factor==1:
         puzzle = Sudoku(3).difficulty(0.6)
-        timer_sec = 360
+        timer_sec = 600
     elif difficulty_factor==2:
         puzzle = Sudoku(3).difficulty(0.8)
         timer_sec = 1200
@@ -174,9 +193,33 @@ def createBoard(window,difficulty_factor):
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 pos = pygame.mouse.get_pos()
                 print(pos)
+                if timer_sec > 0:
+                    timer_sec -= 1
+                    timer_text = game_font.render(time.strftime('%M:%S',time.gmtime(timer_sec)),True,(0,0,0))
+                    pygame.draw.rect(window, (255,255,255), (400, WIDTH+100, 120, 50))
+                    window.blit(timer_text,(415,WIDTH+100))
+                    pygame.display.update()
+                else:
+                    pygame.draw.rect(window, (255,255,255), (300, WIDTH+100, 220, 50))
+                    game_over_text = game_font.render("Game Over", True, wrong_color)
+                    window.blit(game_over_text,(315,WIDTH+100))
+                    pygame.display.update()
+                    time.sleep(5)
+                    exit()
                 if 49 < pos[0] < 170 and WIDTH+100 < pos[1] < WIDTH+150:
                     checkBoard(window,grid)
-                else:
+                elif 49<pos[0]<WIDTH and 49<pos[1]<WIDTH:
+                    width_first_col = 4 if (pos[0]//50-1)%3 == 0 else 2
+                    width_second_col = 4 if (pos[0]//50)%3 == 0 else 2
+                    width_first_line = 4 if (pos[1]//50-1)%3 == 0 else 2
+                    width_second_line = 4 if (pos[1]//50)%3 == 0 else 2
+                    print(pos[0]//50)
+                    print(pos[1]//50)
+                    pygame.draw.line(window,(0, 255, 255),(pos[0]//50*50,pos[1]//50*50), (pos[0]//50*50 + 50,pos[1]//50*50),width_first_line)
+                    pygame.draw.line(window,(0, 255, 255),(pos[0]//50*50,pos[1]//50*50), (pos[0]//50*50,pos[1]//50*50+50),width_first_col)
+                    pygame.draw.line(window,(0, 255, 255),(pos[0]//50*50+50,pos[1]//50*50), (pos[0]//50*50 + 50,pos[1]//50*50+50),width_second_col)
+                    pygame.draw.line(window,(0, 255, 255),(pos[0]//50*50,pos[1]//50*50+50), (pos[0]//50*50 + 50,pos[1]//50*50+50),width_second_line)
+                    pygame.display.update()
                     drawNumber(window, (pos[0]//50,pos[1]//50), game_font,grid,original_grid)
             if event.type == pygame.QUIT:
                 pygame.quit()
